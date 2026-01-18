@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#1e40af"/>
+  <circle cx="256" cy="256" r="140" fill="none" stroke="#ffffff" stroke-width="24"/>
+  <path d="M 180 200 Q 256 140 332 200 Q 340 256 332 312 Q 256 372 180 312 Q 172 256 180 200" fill="#22c55e"/>
+  <text x="256" y="280" text-anchor="middle" font-family="system-ui" font-size="80" font-weight="bold" fill="#ffffff">OS</text>
+</svg>
