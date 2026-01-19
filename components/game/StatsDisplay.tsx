@@ -1,7 +1,7 @@
 'use client'
 
 import { GameEvent } from '@/lib/types/database'
-import { calculateStats, formatSavePercentage } from '@/lib/utils/stats'
+import { calculateStats, formatGPA } from '@/lib/utils/stats'
 
 interface StatsDisplayProps {
   events: GameEvent[]
@@ -27,10 +27,10 @@ export function StatsDisplay({ events, primaryColor = '#1e40af' }: StatsDisplayP
         className="text-5xl font-bold"
         style={{ color: stats.savePercentage >= 90 ? 'var(--save-green)' : primaryColor }}
       >
-        {formatSavePercentage(stats.savePercentage)}
+        {formatGPA(stats.savePercentage)}
       </div>
       <div className="text-sm text-[var(--foreground)]/60 uppercase tracking-wide mt-1">
-        Save Percentage
+        Goalie Performance Average
       </div>
     </div>
   )

@@ -32,3 +32,11 @@ export function formatSavePercentage(percentage: number): string {
   if (percentage === 100) return '100%'
   return `${percentage.toFixed(1)}%`
 }
+
+// GPA format: 92.5% becomes "GPA 9.25"
+export function formatGPA(percentage: number): string {
+  const gpa = percentage / 10
+  if (gpa === 0) return 'GPA 0.00'
+  if (gpa === 10) return 'GPA 10.00'
+  return `GPA ${gpa.toFixed(2)}`
+}

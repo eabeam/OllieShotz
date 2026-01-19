@@ -14,6 +14,7 @@ export default function NewGamePage() {
   const router = useRouter()
   const { profile } = useChildProfile()
   const [opponent, setOpponent] = useState('')
+  const [location, setLocation] = useState('')
   const [gameDate, setGameDate] = useState(new Date().toISOString().split('T')[0])
   const [periods, setPeriods] = useState<string[]>(defaultPeriods)
   const [newPeriod, setNewPeriod] = useState('')
@@ -47,6 +48,7 @@ export default function NewGamePage() {
       .insert({
         child_id: profile.id,
         opponent,
+        location: location || null,
         game_date: gameDate,
         periods,
         status: 'live',
@@ -83,6 +85,13 @@ export default function NewGamePage() {
             value={opponent}
             onChange={(e) => setOpponent(e.target.value)}
             required
+          />
+
+          <Input
+            label="Location"
+            placeholder="e.g., Home Arena, Away Rink"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
           />
 
           <Input

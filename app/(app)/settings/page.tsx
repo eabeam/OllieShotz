@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useChildProfile } from '@/lib/hooks/useChildProfile'
+import { useTheme } from '@/lib/context/ThemeContext'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -12,7 +13,7 @@ import { FamilyMember } from '@/lib/types/database'
 
 const colorOptions = [
   { name: 'Blue', primary: '#1e40af', secondary: '#ffffff' },
-  { name: 'Red', primary: '#dc2626', secondary: '#ffffff' },
+  { name: 'Hawks', primary: '#cc0000', secondary: '#ffffff', accent: '#000000' },
   { name: 'Green', primary: '#16a34a', secondary: '#ffffff' },
   { name: 'Purple', primary: '#7c3aed', secondary: '#ffffff' },
   { name: 'Orange', primary: '#ea580c', secondary: '#ffffff' },
@@ -22,8 +23,10 @@ const colorOptions = [
 export default function SettingsPage() {
   const router = useRouter()
   const { profile, updateProfile, loading: profileLoading } = useChildProfile()
+  const { theme, toggleTheme } = useTheme()
   const [name, setName] = useState('')
   const [teamName, setTeamName] = useState('')
+  const [jerseyNumber, setJerseyNumber] = useState('')
   const [selectedColor, setSelectedColor] = useState(colorOptions[0])
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -38,6 +41,7 @@ export default function SettingsPage() {
     if (profile) {
       setName(profile.name)
       setTeamName(profile.team_name || '')
+      setJerseyNumber(profile.jersey_number || '')
       const color = colorOptions.find(c => c.primary === profile.primary_color) || colorOptions[0]
       setSelectedColor(color)
     }
@@ -70,6 +74,7 @@ export default function SettingsPage() {
     const error = await updateProfile({
       name,
       team_name: teamName || null,
+      jersey_number: jerseyNumber || null,
       primary_color: selectedColor.primary,
       secondary_color: selectedColor.secondary,
     })
@@ -172,6 +177,14 @@ export default function SettingsPage() {
             placeholder="Optional"
           />
 
+          <Input
+            label="Jersey Number"
+            value={jerseyNumber}
+            onChange={(e) => setJerseyNumber(e.target.value)}
+            placeholder="Optional"
+            maxLength={3}
+          />
+
           <div>
             <label className="block text-sm font-medium text-[var(--foreground)]/80 mb-3">
               Team Colors
@@ -183,7 +196,7 @@ export default function SettingsPage() {
                   type="button"
                   onClick={() => setSelectedColor(color)}
                   className={`
-                    relative h-12 rounded-xl border-2 transition-all
+                    relative h-12 rounded-xl border-2 transition-all overflow-hidden
                     ${selectedColor.name === color.name
                       ? 'border-white scale-105'
                       : 'border-transparent'
@@ -191,6 +204,13 @@ export default function SettingsPage() {
                   `}
                   style={{ backgroundColor: color.primary }}
                 >
+                  {/* Black accent stripe for Hawks */}
+                  {'accent' in color && (
+                    <div
+                      className="absolute bottom-0 left-0 right-0 h-2"
+                      style={{ backgroundColor: color.accent }}
+                    />
+                  )}
                   <span
                     className="absolute inset-0 flex items-center justify-center text-sm font-medium"
                     style={{ color: color.secondary }}
@@ -217,6 +237,43 @@ export default function SettingsPage() {
               {message.text}
             </div>
           )}
+        </div>
+      </Card>
+
+      {/* Appearance */}
+      <Card className="mb-6" padding="lg">
+        <h2 className="text-lg font-semibold mb-4">Appearance</h2>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="font-medium">Theme</div>
+            <div className="text-sm text-[var(--foreground)]/60">
+              {theme === 'dark' ? 'Dark mode' : 'Light mode'}
+            </div>
+          </div>
+          <button
+            onClick={toggleTheme}
+            className="relative w-14 h-8 rounded-full transition-colors duration-200"
+            style={{
+              backgroundColor: theme === 'dark' ? 'var(--primary)' : 'var(--muted)'
+            }}
+          >
+            <span
+              className="absolute top-1 w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-200 flex items-center justify-center"
+              style={{
+                transform: theme === 'dark' ? 'translateX(28px)' : 'translateX(4px)'
+              }}
+            >
+              {theme === 'dark' ? (
+                <svg className="w-4 h-4 text-[var(--primary)]" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                </svg>
+              )}
+            </span>
+          </button>
         </div>
       </Card>
 
