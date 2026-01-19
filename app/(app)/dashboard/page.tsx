@@ -8,7 +8,7 @@ import { useChildProfile } from '@/lib/hooks/useChildProfile'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Game, GameEvent } from '@/lib/types/database'
-import { calculateStats, formatSavePercentage } from '@/lib/utils/stats'
+import { calculateStats, formatGPA } from '@/lib/utils/stats'
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -18,11 +18,15 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    console.log('Dashboard: Effect running', { profileLoading, profile: profile?.id })
     if (profileLoading) return
     if (!profile) {
+      console.log('Dashboard: No profile found, redirecting to setup')
+      setLoading(false)
       router.push('/setup')
       return
     }
+    console.log('Dashboard: Profile found, fetching games')
 
     async function fetchGames() {
       const supabase = createClient()
@@ -60,9 +64,30 @@ export default function DashboardPage() {
 
   return (
     <div className="p-4 safe-top">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">{profile.name}</h1>
+      {/* App Branding */}
+      <div className="text-center mb-6">
+        <h1
+          className="text-3xl font-black tracking-tight"
+          style={{ color: profile.primary_color || 'var(--primary)' }}
+        >
+          OllieShotz
+        </h1>
+        <p className="text-xs text-[var(--foreground)]/50 uppercase tracking-widest">Goalie Tracker</p>
+      </div>
+
+      {/* Player Header */}
+      <div className="mb-6 text-center">
+        <div className="flex items-center justify-center gap-2">
+          <h2 className="text-xl font-bold">{profile.name}</h2>
+          {profile.jersey_number && (
+            <span
+              className="px-2 py-0.5 rounded-md text-sm font-bold"
+              style={{ backgroundColor: profile.primary_color, color: '#fff' }}
+            >
+              #{profile.jersey_number}
+            </span>
+          )}
+        </div>
         {profile.team_name && (
           <p className="text-[var(--foreground)]/60">{profile.team_name}</p>
         )}
@@ -124,7 +149,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-bold">
-                          {formatSavePercentage(stats.savePercentage)}
+                          {formatGPA(stats.savePercentage)}
                         </div>
                         <div className="text-sm text-[var(--foreground)]/60">
                           {stats.saves} saves, {stats.goals} goals

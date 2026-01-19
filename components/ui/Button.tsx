@@ -1,6 +1,7 @@
 'use client'
 
 import { ButtonHTMLAttributes, forwardRef } from 'react'
+import { hapticFeedback } from '@/lib/utils/haptics'
 
 type ButtonVariant = 'primary' | 'secondary' | 'save' | 'goal' | 'danger' | 'ghost'
 type ButtonSize = 'sm' | 'md' | 'lg' | 'xl'
@@ -10,11 +11,12 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: ButtonSize
   loading?: boolean
   fullWidth?: boolean
+  haptic?: boolean
 }
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary: 'bg-[var(--primary)] hover:bg-[var(--primary-light)] text-white',
-  secondary: 'bg-[var(--muted)] hover:bg-[var(--border)] text-white',
+  secondary: 'bg-[var(--muted)] hover:bg-[var(--border)] text-[var(--foreground)]',
   save: 'bg-[var(--save-green)] hover:bg-[var(--save-green-dark)] active:bg-[var(--save-green-dark)] text-white',
   goal: 'bg-[var(--goal-red)] hover:bg-[var(--goal-red-dark)] active:bg-[var(--goal-red-dark)] text-white',
   danger: 'bg-[var(--goal-red)] hover:bg-[var(--goal-red-dark)] text-white',
@@ -35,10 +37,20 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     size = 'md',
     loading = false,
     fullWidth = false,
+    haptic = true,
     disabled,
+    onClick,
     children,
     ...props
   }, ref) => {
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (haptic && !disabled && !loading) {
+        const intensity = size === 'xl' ? 'heavy' : size === 'lg' ? 'medium' : 'light'
+        hapticFeedback(intensity)
+      }
+      onClick?.(e)
+    }
+
     return (
       <button
         ref={ref}
@@ -54,6 +66,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           ${className}
         `}
         disabled={disabled || loading}
+        onClick={handleClick}
         {...props}
       >
         {loading ? (

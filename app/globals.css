@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
-:root {
+:root,
+html[data-theme="dark"] {
   --background: #0a0a0a;
   --foreground: #ededed;
   --primary: #1e40af;
@@ -11,6 +12,25 @@
   --goal-red-dark: #dc2626;
   --muted: #404040;
   --border: #262626;
+  --card-bg: rgba(64, 64, 64, 0.3);
+  --team-primary: #1e40af;
+  --team-secondary: #ffffff;
+}
+
+html[data-theme="light"] {
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --primary: #1e40af;
+  --primary-light: #3b82f6;
+  --save-green: #22c55e;
+  --save-green-dark: #16a34a;
+  --goal-red: #ef4444;
+  --goal-red-dark: #dc2626;
+  --muted: #f0f0f0;
+  --border: #e0e0e0;
+  --card-bg: rgba(255, 255, 255, 0.9);
+  --team-primary: #1e40af;
+  --team-secondary: #ffffff;
 }
 
 @theme inline {
@@ -24,6 +44,8 @@
   --color-goal-red-dark: var(--goal-red-dark);
   --color-muted: var(--muted);
   --color-border: var(--border);
+  --color-team-primary: var(--team-primary);
+  --color-team-secondary: var(--team-secondary);
 }
 
 * {
@@ -40,6 +62,7 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   min-height: 100%;
   touch-action: manipulation;
+  transition: background-color 0.2s, color 0.2s;
 }
 
 /* Prevent pull-to-refresh on iOS */
@@ -54,4 +77,23 @@ body {
 
 .safe-top {
   padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Team color accent bar */
+.team-accent {
+  background: linear-gradient(90deg, var(--team-primary), var(--team-primary));
+}
+
+/* Team colored elements */
+.team-bg {
+  background-color: var(--team-primary);
+  color: var(--team-secondary);
+}
+
+.team-text {
+  color: var(--team-primary);
+}
+
+.team-border {
+  border-color: var(--team-primary);
 }

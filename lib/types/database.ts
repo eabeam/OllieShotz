@@ -15,6 +15,7 @@ export interface Database {
           owner_id: string
           name: string
           team_name: string | null
+          jersey_number: string | null
           primary_color: string
           secondary_color: string
           created_at: string
@@ -24,6 +25,7 @@ export interface Database {
           owner_id: string
           name: string
           team_name?: string | null
+          jersey_number?: string | null
           primary_color?: string
           secondary_color?: string
           created_at?: string
@@ -33,6 +35,7 @@ export interface Database {
           owner_id?: string
           name?: string
           team_name?: string | null
+          jersey_number?: string | null
           primary_color?: string
           secondary_color?: string
           created_at?: string
@@ -76,6 +79,7 @@ export interface Database {
           child_id: string
           game_date: string
           opponent: string
+          location: string | null
           periods: string[]
           status: 'upcoming' | 'live' | 'completed'
           notes: string | null
@@ -87,6 +91,7 @@ export interface Database {
           child_id: string
           game_date: string
           opponent: string
+          location?: string | null
           periods?: string[]
           status?: 'upcoming' | 'live' | 'completed'
           notes?: string | null
@@ -98,6 +103,7 @@ export interface Database {
           child_id?: string
           game_date?: string
           opponent?: string
+          location?: string | null
           periods?: string[]
           status?: 'upcoming' | 'live' | 'completed'
           notes?: string | null

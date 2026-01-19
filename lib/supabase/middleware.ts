@@ -32,15 +32,15 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Protect app routes - redirect to login if not authenticated
-  if (
-    !user &&
+  const isProtectedRoute =
     request.nextUrl.pathname.startsWith('/dashboard') ||
     request.nextUrl.pathname.startsWith('/game') ||
     request.nextUrl.pathname.startsWith('/history') ||
     request.nextUrl.pathname.startsWith('/export') ||
     request.nextUrl.pathname.startsWith('/settings') ||
     request.nextUrl.pathname.startsWith('/setup')
-  ) {
+
+  if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)

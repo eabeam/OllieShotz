@@ -1,11 +1,14 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { useGame } from '@/lib/hooks/useGame'
 import { useChildProfile } from '@/lib/hooks/useChildProfile'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { calculateStats, calculateStatsByPeriod, formatSavePercentage } from '@/lib/utils/stats'
+import { Modal } from '@/components/ui/Modal'
+import { calculateStats, calculateStatsByPeriod, formatGPA } from '@/lib/utils/stats'
 
 export default function GameSummaryPage() {
   const router = useRouter()
@@ -14,6 +17,23 @@ export default function GameSummaryPage() {
 
   const { game, events, loading, error } = useGame(gameId)
   const { profile } = useChildProfile()
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDeleteGame = async () => {
+    setDeleting(true)
+    const supabase = createClient()
+
+    const { error: deleteError } = await supabase
+      .from('games')
+      .delete()
+      .eq('id', gameId)
+
+    if (!deleteError) {
+      router.push('/history')
+    }
+    setDeleting(false)
+  }
 
   if (loading) {
     return (
@@ -54,6 +74,9 @@ export default function GameSummaryPage() {
             month: 'long',
             day: 'numeric',
           })}
+          {game.location && (
+            <div className="text-sm mt-1">📍 {game.location}</div>
+          )}
         </div>
       </div>
 
@@ -64,9 +87,9 @@ export default function GameSummaryPage() {
             className="text-6xl font-bold mb-2"
             style={{ color: stats.savePercentage >= 90 ? 'var(--save-green)' : profile?.primary_color }}
           >
-            {formatSavePercentage(stats.savePercentage)}
+            {formatGPA(stats.savePercentage)}
           </div>
-          <div className="text-[var(--foreground)]/60 mb-4">Save Percentage</div>
+          <div className="text-[var(--foreground)]/60 mb-4">Goalie Performance Average</div>
 
           <div className="flex justify-center gap-8">
             <div>
@@ -99,7 +122,7 @@ export default function GameSummaryPage() {
                     <span className="text-[var(--save-green)]">{periodStats.saves} saves</span>
                     <span className="text-[var(--goal-red)]">{periodStats.goals} goals</span>
                     <span className="font-medium">
-                      {formatSavePercentage(periodStats.savePercentage)}
+                      {formatGPA(periodStats.savePercentage)}
                     </span>
                   </div>
                 </div>
@@ -128,7 +151,42 @@ export default function GameSummaryPage() {
             View Game Details
           </Button>
         )}
+        <Button
+          variant="danger"
+          fullWidth
+          onClick={() => setShowDeleteModal(true)}
+        >
+          Delete Game
+        </Button>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete Game?"
+      >
+        <p className="text-[var(--foreground)]/80 mb-4">
+          Are you sure you want to delete this game vs {game.opponent}? This action cannot be undone.
+        </p>
+        <div className="flex gap-3 mb-4">
+          <Button
+            variant="secondary"
+            fullWidth
+            onClick={() => setShowDeleteModal(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            fullWidth
+            onClick={handleDeleteGame}
+            loading={deleting}
+          >
+            Delete
+          </Button>
+        </div>
+      </Modal>
     </div>
   )
 }

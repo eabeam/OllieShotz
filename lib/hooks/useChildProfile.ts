@@ -11,52 +11,62 @@ export function useChildProfile() {
 
   useEffect(() => {
     async function fetchProfile() {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
+      try {
+        const supabase = createClient()
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-      if (!user) {
-        setLoading(false)
-        return
-      }
+        if (authError || !user) {
+          console.log('No user found or auth error:', authError)
+          setLoading(false)
+          return
+        }
 
-      // First check for owned profile
-      const { data: ownedProfile, error: ownedError } = await supabase
-        .from('child_profiles')
-        .select('*')
-        .eq('owner_id', user.id)
-        .single()
-
-      if (ownedProfile) {
-        setProfile(ownedProfile)
-        setLoading(false)
-        return
-      }
-
-      // Check for family access
-      const { data: familyAccess } = await supabase
-        .from('family_members')
-        .select('child_id')
-        .eq('user_id', user.id)
-        .eq('status', 'accepted')
-        .limit(1)
-
-      if (familyAccess && familyAccess.length > 0) {
-        const { data: sharedProfile, error: sharedError } = await supabase
+        // First check for owned profile
+        const { data: ownedProfiles, error: ownedError } = await supabase
           .from('child_profiles')
           .select('*')
-          .eq('id', familyAccess[0].child_id)
-          .single()
+          .eq('owner_id', user.id)
+          .order('created_at', { ascending: true })
+          .limit(1)
 
-        if (sharedProfile) {
-          setProfile(sharedProfile)
-        } else if (sharedError) {
-          setError(sharedError.message)
+        if (ownedProfiles && ownedProfiles.length > 0) {
+          setProfile(ownedProfiles[0])
+          setLoading(false)
+          return
         }
-      } else if (ownedError && ownedError.code !== 'PGRST116') {
-        setError(ownedError.message)
-      }
 
-      setLoading(false)
+        // Check for family access
+        const { data: familyAccess } = await supabase
+          .from('family_members')
+          .select('child_id')
+          .eq('user_id', user.id)
+          .eq('status', 'accepted')
+          .limit(1)
+
+        if (familyAccess && familyAccess.length > 0) {
+          const { data: sharedProfiles, error: sharedError } = await supabase
+            .from('child_profiles')
+            .select('*')
+            .eq('id', familyAccess[0].child_id)
+            .limit(1)
+
+          if (sharedProfiles && sharedProfiles.length > 0) {
+            setProfile(sharedProfiles[0])
+          } else if (sharedError) {
+            setError(sharedError.message)
+          }
+        } else if (ownedError) {
+          console.log('No owned profile found:', ownedError.message)
+        }
+
+        // New user with no profile - this is expected
+        console.log('No profile found for user, should redirect to setup')
+        setLoading(false)
+      } catch (err) {
+        console.error('Error fetching profile:', err)
+        setError('Failed to load profile')
+        setLoading(false)
+      }
     }
 
     fetchProfile()

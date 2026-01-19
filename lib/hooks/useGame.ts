@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Game, GameEvent } from '@/lib/types/database'
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
@@ -10,6 +10,9 @@ export function useGame(gameId: string) {
   const [events, setEvents] = useState<GameEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Track recently added event IDs to prevent duplicates from realtime
+  const recentlyAddedIds = useRef<Set<string>>(new Set())
 
   const supabase = createClient()
 
@@ -62,12 +65,22 @@ export function useGame(gameId: string) {
         },
         (payload: RealtimePostgresChangesPayload<GameEvent>) => {
           if (payload.eventType === 'INSERT') {
+            const newEvent = payload.new as GameEvent
+            // Skip if we recently added this event ourselves (prevents duplicates)
+            if (recentlyAddedIds.current.has(newEvent.id)) {
+              recentlyAddedIds.current.delete(newEvent.id)
+              return
+            }
             setEvents(prev => {
               // Avoid duplicates
-              if (prev.some(e => e.id === (payload.new as GameEvent).id)) {
+              if (prev.some(e => e.id === newEvent.id)) {
                 return prev
               }
-              return [...prev, payload.new as GameEvent]
+              const newEvents = [...prev, newEvent]
+              // Sort by recorded_at to maintain order
+              return newEvents.sort((a, b) =>
+                new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime()
+              )
             })
           } else if (payload.eventType === 'DELETE') {
             setEvents(prev => prev.filter(e => e.id !== (payload.old as GameEvent).id))
@@ -127,6 +140,9 @@ export function useGame(gameId: string) {
       return { error }
     }
 
+    // Track this ID so realtime doesn't duplicate it
+    recentlyAddedIds.current.add(data.id)
+
     // Replace temp event with real one
     setEvents(prev => prev.map(e => e.id === tempId ? data : e))
     return { data }
@@ -167,6 +183,19 @@ export function useGame(gameId: string) {
     return { error }
   }, [game, gameId, supabase])
 
+  const updateNotes = useCallback(async (notes: string) => {
+    const { error } = await supabase
+      .from('games')
+      .update({ notes })
+      .eq('id', gameId)
+
+    if (!error && game) {
+      setGame({ ...game, notes })
+    }
+
+    return { error }
+  }, [game, gameId, supabase])
+
   return {
     game,
     events,
@@ -175,5 +204,6 @@ export function useGame(gameId: string) {
     addEvent,
     undoLastEvent,
     updateGameStatus,
+    updateNotes,
   }
 }

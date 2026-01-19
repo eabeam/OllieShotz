@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useChildProfile } from '@/lib/hooks/useChildProfile'
 import { Card } from '@/components/ui/Card'
 import { Game, GameEvent } from '@/lib/types/database'
-import { calculateStats, formatSavePercentage } from '@/lib/utils/stats'
+import { calculateStats, formatGPA } from '@/lib/utils/stats'
 
 type GameWithEvents = Game & { events: GameEvent[] }
 
@@ -67,7 +67,7 @@ export default function HistoryPage() {
               Season Stats ({games.length} games)
             </div>
             <div className="text-4xl font-bold mb-2" style={{ color: profile?.primary_color }}>
-              {formatSavePercentage(overallStats.savePercentage)}
+              {formatGPA(overallStats.savePercentage)}
             </div>
             <div className="flex justify-center gap-6 text-sm">
               <span className="text-[var(--save-green)]">{overallStats.saves} saves</span>
@@ -86,10 +86,11 @@ export default function HistoryPage() {
             className={`
               px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors
               ${filter === f
-                ? 'bg-[var(--primary)] text-white'
+                ? 'text-white'
                 : 'bg-[var(--muted)] text-[var(--foreground)]/60'
               }
             `}
+            style={filter === f ? { backgroundColor: profile?.primary_color || 'var(--primary)' } : undefined}
           >
             {f === 'all' ? 'All Games' : f === 'completed' ? 'Completed' : 'Live'}
           </button>
@@ -122,11 +123,12 @@ export default function HistoryPage() {
                       </div>
                       <div className="text-sm text-[var(--foreground)]/60">
                         {new Date(game.game_date).toLocaleDateString()}
+                        {game.location && ` • ${game.location}`}
                       </div>
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-bold">
-                        {formatSavePercentage(stats.savePercentage)}
+                        {formatGPA(stats.savePercentage)}
                       </div>
                       <div className="text-sm text-[var(--foreground)]/60">
                         {stats.saves}S / {stats.goals}G

@@ -44,7 +44,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
 
       {/* Modal content */}
       <div
-        className="relative w-full max-w-lg bg-[var(--background)] border border-[var(--border)] rounded-t-2xl sm:rounded-2xl p-6 max-h-[90vh] overflow-y-auto safe-bottom"
+        className="relative w-full max-w-lg bg-[var(--background)] border border-[var(--border)] rounded-t-2xl sm:rounded-2xl p-6 pb-10 max-h-[90vh] overflow-y-auto safe-bottom"
         onClick={e => e.stopPropagation()}
       >
         {title && (

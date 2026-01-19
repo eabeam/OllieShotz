@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useTeamColors } from '@/lib/context/TeamColorContext'
 
 const navItems = [
   {
@@ -23,11 +24,11 @@ const navItems = [
     ),
   },
   {
-    href: '/export',
-    label: 'Export',
+    href: '/stats',
+    label: 'Stats',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
       </svg>
     ),
   },
@@ -45,9 +46,15 @@ const navItems = [
 
 export function Navigation() {
   const pathname = usePathname()
+  const { primaryColor } = useTeamColors()
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-[var(--background)] border-t border-[var(--border)] safe-bottom z-40">
+      {/* Team color accent line */}
+      <div
+        className="absolute top-0 left-0 right-0 h-0.5"
+        style={{ backgroundColor: primaryColor }}
+      />
       <div className="flex justify-around items-center h-16">
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.href)
@@ -57,9 +64,10 @@ export function Navigation() {
               href={item.href}
               className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
                 isActive
-                  ? 'text-[var(--primary-light)]'
+                  ? ''
                   : 'text-[var(--foreground)]/50 hover:text-[var(--foreground)]/80'
               }`}
+              style={isActive ? { color: primaryColor } : undefined}
             >
               {item.icon}
               <span className="text-xs mt-1">{item.label}</span>
