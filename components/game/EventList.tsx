@@ -8,7 +8,11 @@ interface EventListProps {
 }
 
 export function EventList({ events, maxItems = 10 }: EventListProps) {
-  const recentEvents = [...events].reverse().slice(0, maxItems)
+  // Deduplicate events by ID to prevent React key warnings from rapid button presses
+  const uniqueEvents = events.filter((event, index, self) =>
+    index === self.findIndex(e => e.id === event.id)
+  )
+  const recentEvents = [...uniqueEvents].reverse().slice(0, maxItems)
 
   if (recentEvents.length === 0) {
     return (

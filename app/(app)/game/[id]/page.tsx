@@ -11,7 +11,6 @@ import { EventList } from '@/components/game/EventList'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Modal } from '@/components/ui/Modal'
-import { Input } from '@/components/ui/Input'
 
 export default function GamePage() {
   const router = useRouter()
@@ -26,6 +25,11 @@ export default function GamePage() {
   const [showNotesModal, setShowNotesModal] = useState(false)
   const [notes, setNotes] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
+
+  // Check if Hawks color scheme
+  const isHawks = profile?.primary_color?.toLowerCase().includes('e60000') ||
+                  profile?.primary_color?.toLowerCase().includes('cc0000') ||
+                  profile?.primary_color?.toLowerCase().includes('ff0000')
 
   // Set initial period when game loads
   useEffect(() => {
@@ -94,183 +98,230 @@ export default function GamePage() {
 
   const periods = (game.periods as string[]) || ['P1', 'P2', 'P3']
   const isLive = game.status === 'live'
+  const primaryColor = profile?.primary_color || 'var(--primary)'
 
   return (
-    <div className="min-h-screen flex flex-col p-4 safe-top">
-      {/* Team Color Accent */}
-      <div
-        className="absolute top-0 left-0 right-0 h-1"
-        style={{ backgroundColor: profile?.primary_color || 'var(--primary)' }}
-      />
-
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4 mt-2">
-        <div>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="text-[var(--foreground)]/60 hover:text-[var(--foreground)] text-sm mb-1"
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      {/* Background decorations */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Faded jersey number */}
+        {profile?.jersey_number && (
+          <div
+            className="absolute -right-8 top-32 text-[180px] font-black leading-none select-none"
+            style={{
+              color: primaryColor,
+              opacity: 0.06,
+            }}
           >
-            ← Dashboard
-          </button>
-          <h1 className="text-xl font-bold">vs {game.opponent}</h1>
-          <div className="text-sm text-[var(--foreground)]/60">
-            {new Date(game.game_date).toLocaleDateString()}
-            {game.location && ` • ${game.location}`}
+            {profile.jersey_number}
           </div>
-        </div>
-        <div className="flex items-center gap-3">
-          {isLive && (
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-[var(--goal-red)] rounded-full animate-pulse" />
-              <span className="text-sm font-medium text-[var(--goal-red)]">LIVE</span>
-            </div>
-          )}
-          <button
-            onClick={() => setShowNotesModal(true)}
-            className="p-2 hover:bg-[var(--muted)] rounded-lg transition-colors"
-            title="Game Notes"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-          </button>
-        </div>
-      </div>
+        )}
 
-      {/* Period Selector */}
-      <div className="mb-4">
-        <PeriodSelector
-          periods={periods}
-          currentPeriod={currentPeriod}
-          onPeriodChange={setCurrentPeriod}
+        {/* Hawks logo watermark */}
+        {isHawks && (
+          <img
+            src="/images/hawks-logo.png"
+            alt=""
+            className="absolute left-4 bottom-40 w-56 h-56 object-contain opacity-[0.07]"
+          />
+        )}
+
+        {/* Gradient accent */}
+        <div
+          className="absolute top-0 left-0 right-0 h-48"
+          style={{
+            background: `linear-gradient(180deg, ${primaryColor}15 0%, transparent 100%)`,
+          }}
         />
       </div>
 
-      {/* Stats */}
-      <Card className="mb-4">
-        <StatsDisplay events={events} primaryColor={profile?.primary_color} />
-      </Card>
+      {/* Team Color Accent Bar */}
+      <div
+        className="absolute top-0 left-0 right-0 h-1.5"
+        style={{ backgroundColor: primaryColor }}
+      />
 
-      {/* Tracking Buttons (only if live) */}
-      {isLive ? (
-        <div className="flex-1 flex flex-col">
-          <LiveTracker
-            onSave={handleSave}
-            onGoal={handleGoal}
-            onUndo={handleUndo}
-            canUndo={events.length > 0}
-            disabled={actionLoading}
-          />
-
-          <div className="mt-6">
-            <EventList events={events} />
+      <div className="relative flex flex-col flex-1 p-4 safe-top">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4 mt-2">
+          <div>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="text-[var(--foreground)]/60 hover:text-[var(--foreground)] text-sm mb-1"
+            >
+              ← Dashboard
+            </button>
+            <h1 className="text-xl font-bold">vs {game.opponent}</h1>
+            <div className="text-sm text-[var(--foreground)]/60">
+              {new Date(game.game_date).toLocaleDateString()}
+              {game.location && ` • ${game.location}`}
+            </div>
           </div>
+          <div className="flex items-center gap-3">
+            {isLive && (
+              <div
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full"
+                style={{ backgroundColor: `${primaryColor}20` }}
+              >
+                <span
+                  className="w-2 h-2 rounded-full animate-pulse"
+                  style={{ backgroundColor: primaryColor }}
+                />
+                <span
+                  className="text-sm font-bold"
+                  style={{ color: primaryColor }}
+                >
+                  LIVE
+                </span>
+              </div>
+            )}
+            <button
+              onClick={() => setShowNotesModal(true)}
+              className="p-2 hover:bg-[var(--muted)] rounded-lg transition-colors"
+              title="Game Notes"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </button>
+          </div>
+        </div>
 
-          <div className="mt-auto pt-6">
+        {/* Period Selector */}
+        <div className="mb-4">
+          <PeriodSelector
+            periods={periods}
+            currentPeriod={currentPeriod}
+            onPeriodChange={setCurrentPeriod}
+          />
+        </div>
+
+        {/* Stats */}
+        <Card className="mb-4">
+          <StatsDisplay events={events} primaryColor={primaryColor} />
+        </Card>
+
+        {/* Tracking Buttons (only if live) */}
+        {isLive ? (
+          <div className="flex-1 flex flex-col">
+            <LiveTracker
+              onSave={handleSave}
+              onGoal={handleGoal}
+              onUndo={handleUndo}
+              canUndo={events.length > 0}
+              disabled={actionLoading}
+            />
+
+            <div className="mt-6">
+              <EventList events={events} />
+            </div>
+
+            <div className="mt-auto pt-6">
+              <Button
+                variant="secondary"
+                fullWidth
+                onClick={() => setShowEndModal(true)}
+              >
+                End Game
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex-1">
+            <Card className="mb-4">
+              <div className="text-center py-4">
+                <div className="text-lg font-medium mb-2">
+                  {game.status === 'completed' ? 'Game Completed' : 'Game Not Started'}
+                </div>
+                {game.status === 'upcoming' && (
+                  <Button
+                    onClick={async () => {
+                      await updateGameStatus('live')
+                    }}
+                  >
+                    Start Game
+                  </Button>
+                )}
+                {game.status === 'completed' && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => router.push(`/game/${gameId}/summary`)}
+                  >
+                    View Summary
+                  </Button>
+                )}
+              </div>
+            </Card>
+
+            <EventList events={events} maxItems={20} />
+          </div>
+        )}
+
+        {/* End Game Modal */}
+        <Modal
+          isOpen={showEndModal}
+          onClose={() => setShowEndModal(false)}
+          title="End Game?"
+        >
+          <p className="text-[var(--foreground)]/80 mb-4">
+            Add any final notes before ending the game.
+          </p>
+          <textarea
+            className="w-full p-3 bg-[var(--muted)]/50 border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder:text-[var(--foreground)]/40 focus:outline-none focus:ring-2 focus:ring-[var(--primary-light)] mb-4 min-h-[100px]"
+            placeholder="Game notes (optional)..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
+          <div className="flex gap-3 mb-4">
             <Button
               variant="secondary"
               fullWidth
-              onClick={() => setShowEndModal(true)}
+              onClick={() => setShowEndModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              fullWidth
+              onClick={handleEndGame}
+              loading={actionLoading}
             >
               End Game
             </Button>
           </div>
-        </div>
-      ) : (
-        <div className="flex-1">
-          <Card className="mb-4">
-            <div className="text-center py-4">
-              <div className="text-lg font-medium mb-2">
-                {game.status === 'completed' ? 'Game Completed' : 'Game Not Started'}
-              </div>
-              {game.status === 'upcoming' && (
-                <Button
-                  onClick={async () => {
-                    await updateGameStatus('live')
-                  }}
-                >
-                  Start Game
-                </Button>
-              )}
-              {game.status === 'completed' && (
-                <Button
-                  variant="secondary"
-                  onClick={() => router.push(`/game/${gameId}/summary`)}
-                >
-                  View Summary
-                </Button>
-              )}
-            </div>
-          </Card>
+        </Modal>
 
-          <EventList events={events} maxItems={20} />
-        </div>
-      )}
-
-      {/* End Game Modal */}
-      <Modal
-        isOpen={showEndModal}
-        onClose={() => setShowEndModal(false)}
-        title="End Game?"
-      >
-        <p className="text-[var(--foreground)]/80 mb-4">
-          Add any final notes before ending the game.
-        </p>
-        <textarea
-          className="w-full p-3 bg-[var(--muted)]/50 border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder:text-[var(--foreground)]/40 focus:outline-none focus:ring-2 focus:ring-[var(--primary-light)] mb-4 min-h-[100px]"
-          placeholder="Game notes (optional)..."
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-        />
-        <div className="flex gap-3 mb-4">
-          <Button
-            variant="secondary"
-            fullWidth
-            onClick={() => setShowEndModal(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            fullWidth
-            onClick={handleEndGame}
-            loading={actionLoading}
-          >
-            End Game
-          </Button>
-        </div>
-      </Modal>
-
-      {/* Notes Modal */}
-      <Modal
-        isOpen={showNotesModal}
-        onClose={() => setShowNotesModal(false)}
-        title="Game Notes"
-      >
-        <textarea
-          className="w-full p-3 bg-[var(--muted)]/50 border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder:text-[var(--foreground)]/40 focus:outline-none focus:ring-2 focus:ring-[var(--primary-light)] mb-4 min-h-[150px]"
-          placeholder="Add notes about the game..."
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-        />
-        <div className="flex gap-3 mb-4">
-          <Button
-            variant="secondary"
-            fullWidth
-            onClick={() => setShowNotesModal(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="primary"
-            fullWidth
-            onClick={handleSaveNotes}
-            loading={actionLoading}
-          >
-            Save Notes
-          </Button>
-        </div>
-      </Modal>
+        {/* Notes Modal */}
+        <Modal
+          isOpen={showNotesModal}
+          onClose={() => setShowNotesModal(false)}
+          title="Game Notes"
+        >
+          <textarea
+            className="w-full p-3 bg-[var(--muted)]/50 border border-[var(--border)] rounded-xl text-[var(--foreground)] placeholder:text-[var(--foreground)]/40 focus:outline-none focus:ring-2 focus:ring-[var(--primary-light)] mb-4 min-h-[150px]"
+            placeholder="Add notes about the game..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
+          <div className="flex gap-3 mb-4">
+            <Button
+              variant="secondary"
+              fullWidth
+              onClick={() => setShowNotesModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              fullWidth
+              onClick={handleSaveNotes}
+              loading={actionLoading}
+            >
+              Save Notes
+            </Button>
+          </div>
+        </Modal>
+      </div>
     </div>
   )
 }

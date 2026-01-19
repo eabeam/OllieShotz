@@ -13,7 +13,7 @@ import { FamilyMember } from '@/lib/types/database'
 
 const colorOptions = [
   { name: 'Blue', primary: '#1e40af', secondary: '#ffffff' },
-  { name: 'Hawks', primary: '#cc0000', secondary: '#ffffff', accent: '#000000' },
+  { name: 'Hawks', primary: '#e60000', secondary: '#ffffff', accent: '#000000' },
   { name: 'Green', primary: '#16a34a', secondary: '#ffffff' },
   { name: 'Purple', primary: '#7c3aed', secondary: '#ffffff' },
   { name: 'Orange', primary: '#ea580c', secondary: '#ffffff' },
@@ -196,10 +196,10 @@ export default function SettingsPage() {
                   type="button"
                   onClick={() => setSelectedColor(color)}
                   className={`
-                    relative h-12 rounded-xl border-2 transition-all overflow-hidden
+                    relative h-14 rounded-xl transition-all overflow-hidden
                     ${selectedColor.name === color.name
-                      ? 'border-white scale-105'
-                      : 'border-transparent'
+                      ? 'ring-4 ring-white ring-offset-2 ring-offset-[var(--background)] scale-105 shadow-lg'
+                      : 'opacity-70 hover:opacity-100'
                     }
                   `}
                   style={{ backgroundColor: color.primary }}
@@ -212,11 +212,19 @@ export default function SettingsPage() {
                     />
                   )}
                   <span
-                    className="absolute inset-0 flex items-center justify-center text-sm font-medium"
+                    className="absolute inset-0 flex items-center justify-center text-sm font-bold"
                     style={{ color: color.secondary }}
                   >
                     {color.name}
                   </span>
+                  {/* Checkmark for selected */}
+                  {selectedColor.name === color.name && (
+                    <span className="absolute top-1 right-1 w-5 h-5 bg-white rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3" fill={color.primary} viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -341,7 +349,7 @@ export default function SettingsPage() {
           value={inviteEmail}
           onChange={(e) => setInviteEmail(e.target.value)}
         />
-        <div className="flex gap-3 mt-4">
+        <div className="flex gap-3 mt-4 mb-4">
           <Button
             variant="secondary"
             fullWidth
