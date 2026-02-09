@@ -37,6 +37,16 @@ export default function SettingsPage() {
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviting, setInviting] = useState(false)
 
+  // PIN management
+  const [pinStatus, setPinStatus] = useState<{
+    hasPin: boolean
+    pinEnabled: boolean
+    activeSessions: number
+  } | null>(null)
+  const [currentPin, setCurrentPin] = useState<string | null>(null)
+  const [showPin, setShowPin] = useState(false)
+  const [pinLoading, setPinLoading] = useState(false)
+
   useEffect(() => {
     if (profile) {
       setName(profile.name)
@@ -63,7 +73,20 @@ export default function SettingsPage() {
       }
     }
 
+    async function fetchPinStatus() {
+      try {
+        const response = await fetch('/api/pin/manage')
+        if (response.ok) {
+          const data = await response.json()
+          setPinStatus(data)
+        }
+      } catch (error) {
+        console.error('Failed to fetch PIN status:', error)
+      }
+    }
+
     fetchFamilyMembers()
+    fetchPinStatus()
   }, [profile])
 
   const handleSave = async () => {
@@ -140,6 +163,74 @@ export default function SettingsPage() {
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/login')
+  }
+
+  const handleGeneratePin = async () => {
+    setPinLoading(true)
+    try {
+      const response = await fetch('/api/pin/manage', {
+        method: 'POST',
+      })
+      const data = await response.json()
+
+      if (response.ok) {
+        setCurrentPin(data.pin)
+        setShowPin(true)
+        setPinStatus(prev => prev ? { ...prev, hasPin: true, pinEnabled: true } : null)
+        setMessage({ type: 'success', text: 'PIN generated! Share it with family members.' })
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Failed to generate PIN' })
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to generate PIN' })
+    }
+    setPinLoading(false)
+  }
+
+  const handleTogglePin = async (enabled: boolean) => {
+    setPinLoading(true)
+    try {
+      const response = await fetch('/api/pin/manage', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled }),
+      })
+      const data = await response.json()
+
+      if (response.ok) {
+        setPinStatus(prev => prev ? { ...prev, pinEnabled: enabled } : null)
+        setMessage({ type: 'success', text: enabled ? 'PIN access enabled' : 'PIN access disabled' })
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Failed to update PIN' })
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to update PIN' })
+    }
+    setPinLoading(false)
+  }
+
+  const handleRevokeSessions = async () => {
+    if (!confirm('This will sign out all family members using PIN access. Continue?')) {
+      return
+    }
+
+    setPinLoading(true)
+    try {
+      const response = await fetch('/api/pin/manage', {
+        method: 'DELETE',
+      })
+      const data = await response.json()
+
+      if (response.ok) {
+        setPinStatus(prev => prev ? { ...prev, activeSessions: 0 } : null)
+        setMessage({ type: 'success', text: 'All PIN sessions revoked' })
+      } else {
+        setMessage({ type: 'error', text: data.error || 'Failed to revoke sessions' })
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to revoke sessions' })
+    }
+    setPinLoading(false)
   }
 
   if (profileLoading) {
@@ -283,6 +374,121 @@ export default function SettingsPage() {
             </span>
           </button>
         </div>
+      </Card>
+
+      {/* Quick Access PIN */}
+      <Card className="mb-6" padding="lg">
+        <h2 className="text-lg font-semibold mb-2">Quick Access PIN</h2>
+        <p className="text-sm text-[var(--foreground)]/60 mb-4">
+          Let family members track games without needing an email login.
+        </p>
+
+        {pinStatus ? (
+          <div className="space-y-4">
+            {/* PIN Display / Generate */}
+            {pinStatus.hasPin ? (
+              <div className="flex items-center justify-between p-3 bg-[var(--muted)]/30 rounded-lg">
+                <div>
+                  <div className="text-sm text-[var(--foreground)]/60">Current PIN</div>
+                  <div className="font-mono text-xl font-bold tracking-wider">
+                    {showPin && currentPin ? currentPin : '••••••'}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  {currentPin && (
+                    <button
+                      onClick={() => setShowPin(!showPin)}
+                      className="p-2 text-[var(--foreground)]/60 hover:text-[var(--foreground)]"
+                    >
+                      {showPin ? (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                    </button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={handleGeneratePin}
+                    loading={pinLoading}
+                  >
+                    New PIN
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                fullWidth
+                onClick={handleGeneratePin}
+                loading={pinLoading}
+              >
+                Generate PIN
+              </Button>
+            )}
+
+            {/* Enable/Disable Toggle */}
+            {pinStatus.hasPin && (
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium">PIN Access</div>
+                  <div className="text-sm text-[var(--foreground)]/60">
+                    {pinStatus.pinEnabled ? 'Family can use PIN to access' : 'PIN access is disabled'}
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleTogglePin(!pinStatus.pinEnabled)}
+                  disabled={pinLoading}
+                  className="relative w-14 h-8 rounded-full transition-colors duration-200 disabled:opacity-50"
+                  style={{
+                    backgroundColor: pinStatus.pinEnabled ? 'var(--primary)' : 'var(--muted)'
+                  }}
+                >
+                  <span
+                    className="absolute top-1 w-6 h-6 rounded-full bg-white shadow-md transition-transform duration-200"
+                    style={{
+                      transform: pinStatus.pinEnabled ? 'translateX(28px)' : 'translateX(4px)'
+                    }}
+                  />
+                </button>
+              </div>
+            )}
+
+            {/* Active Sessions */}
+            {pinStatus.hasPin && pinStatus.activeSessions > 0 && (
+              <div className="flex items-center justify-between pt-3 border-t border-[var(--border)]">
+                <div className="text-sm">
+                  <span className="font-medium">{pinStatus.activeSessions}</span>
+                  <span className="text-[var(--foreground)]/60"> active PIN session{pinStatus.activeSessions !== 1 ? 's' : ''}</span>
+                </div>
+                <button
+                  onClick={handleRevokeSessions}
+                  disabled={pinLoading}
+                  className="text-sm text-[var(--goal-red)] hover:underline disabled:opacity-50"
+                >
+                  Revoke All
+                </button>
+              </div>
+            )}
+
+            {/* Share Instructions */}
+            {pinStatus.hasPin && pinStatus.pinEnabled && (
+              <div className="p-3 bg-[var(--primary)]/10 rounded-lg text-sm">
+                <div className="font-medium text-[var(--primary)] mb-1">Share with family:</div>
+                <div className="text-[var(--foreground)]/70">
+                  Go to <span className="font-mono">ollieshotz.com/pin-login</span> and enter the PIN
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="animate-pulse h-20 bg-[var(--muted)]/30 rounded-lg" />
+        )}
       </Card>
 
       {/* Family Sharing */}

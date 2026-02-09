@@ -16,11 +16,12 @@ export async function GET(request: Request) {
 
       if (user) {
         // Check for existing profile (owner or family member)
-        const { data: ownedProfile } = await supabase
+        const { data: ownedProfiles } = await supabase
           .from('child_profiles')
           .select('id')
           .eq('owner_id', user.id)
-          .single()
+          .order('created_at', { ascending: true })
+          .limit(1)
 
         const { data: familyAccess } = await supabase
           .from('family_members')
@@ -30,7 +31,9 @@ export async function GET(request: Request) {
           .limit(1)
 
         // If no profile access, redirect to setup
-        if (!ownedProfile && (!familyAccess || familyAccess.length === 0)) {
+        const hasOwnedProfile = !!ownedProfiles && ownedProfiles.length > 0
+
+        if (!hasOwnedProfile && (!familyAccess || familyAccess.length === 0)) {
           // Check for pending invites
           const { data: pendingInvites } = await supabase
             .from('family_members')

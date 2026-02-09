@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -84,6 +85,19 @@ export default function LoginPage() {
         <p className="text-center text-sm text-[var(--foreground)]/40 mt-6">
           No password needed. We&apos;ll send you a magic link.
         </p>
+
+        {/* PIN Login Link */}
+        <div className="text-center mt-4 pt-4 border-t border-[var(--border)]">
+          <p className="text-sm text-[var(--foreground)]/60 mb-2">
+            Have a PIN?
+          </p>
+          <Link
+            href="/pin-login"
+            className="text-sm font-medium text-[var(--primary)] hover:underline"
+          >
+            Enter PIN for Quick Access
+          </Link>
+        </div>
       </div>
     </div>
   )
