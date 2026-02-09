@@ -85,6 +85,28 @@ export default function SetupPage() {
       return
     }
 
+    console.log('Setup: Re-checking existing profiles before insert', user.id)
+
+    const { data: existingProfiles, error: existingError } = await supabase
+      .from('child_profiles')
+      .select('id')
+      .eq('owner_id', user.id)
+      .order('created_at', { ascending: true })
+      .limit(1)
+
+    if (existingError) {
+      console.error('Setup: Error checking profile before insert', existingError)
+      setError(`Error checking profile: ${existingError.message}`)
+      setLoading(false)
+      return
+    }
+
+    if (existingProfiles && existingProfiles.length > 0) {
+      console.log('Setup: Profile already exists, redirecting to dashboard')
+      router.push('/dashboard')
+      return
+    }
+
     console.log('Setup: Inserting profile for user', user.id)
 
     const { data: insertedProfile, error: insertError } = await supabase
@@ -104,6 +126,11 @@ export default function SetupPage() {
 
     if (insertError) {
       console.error('Setup: Insert error', insertError)
+      if (insertError.code === '23505') {
+        console.log('Setup: Duplicate profile detected, redirecting to dashboard')
+        router.push('/dashboard')
+        return
+      }
       setError(insertError.message)
       setDebugInfo(prev => prev + `\nInsert error: ${insertError.code} - ${insertError.message}`)
       setLoading(false)

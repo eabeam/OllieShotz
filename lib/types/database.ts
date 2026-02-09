@@ -19,6 +19,8 @@ export interface Database {
           primary_color: string
           secondary_color: string
           created_at: string
+          pin_hash: string | null
+          pin_enabled: boolean
         }
         Insert: {
           id?: string
@@ -29,6 +31,8 @@ export interface Database {
           primary_color?: string
           secondary_color?: string
           created_at?: string
+          pin_hash?: string | null
+          pin_enabled?: boolean
         }
         Update: {
           id?: string
@@ -39,6 +43,40 @@ export interface Database {
           primary_color?: string
           secondary_color?: string
           created_at?: string
+          pin_hash?: string | null
+          pin_enabled?: boolean
+        }
+      }
+      pin_sessions: {
+        Row: {
+          id: string
+          child_id: string
+          anon_user_id: string
+          device_info: string | null
+          created_at: string
+          last_used_at: string
+          revoked: boolean
+          revoked_at: string | null
+        }
+        Insert: {
+          id?: string
+          child_id: string
+          anon_user_id: string
+          device_info?: string | null
+          created_at?: string
+          last_used_at?: string
+          revoked?: boolean
+          revoked_at?: string | null
+        }
+        Update: {
+          id?: string
+          child_id?: string
+          anon_user_id?: string
+          device_info?: string | null
+          created_at?: string
+          last_used_at?: string
+          revoked?: boolean
+          revoked_at?: string | null
         }
       }
       family_members: {
@@ -162,3 +200,4 @@ export type GameEvent = Database['public']['Tables']['events']['Row']
 export type NewChildProfile = Database['public']['Tables']['child_profiles']['Insert']
 export type NewGame = Database['public']['Tables']['games']['Insert']
 export type NewGameEvent = Database['public']['Tables']['events']['Insert']
+export type PinSession = Database['public']['Tables']['pin_sessions']['Row']
